@@ -3,16 +3,19 @@ set -e  # Exit immediately if any command fails
 
 # --- Argument Checking ---
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <Xms_in_M> <Xmx_in_M> <repo_path_or_url>"
+    echo "Usage: $0 <Xms_in_M> <Xmx_in_M> <repo_path_or_url> <Auto_update_script(Default: 1)>"
     echo "Example (GitHub): $0 1000 8000 https://github.com/SlagterJ/geertenjordy-server.git"
-    echo "Example (Local Dev): $0 1000 8000 /home/user/my-local-repo"
+    echo "Example (Local Dev): $0 1000 8000 /home/user/my-local-repo 0"
     exit 1
 fi
 
 MEM_MIN="$1"
 MEM_MAX="$2"
 REPO_SOURCE="$3"
-AUTO_UPDATE="$4"
+AUTO_UPDATE=1
+if [ -n "$4" ]; then
+  AUTO_UPDATE="$4"
+fi
 REPO_DIR="git-repo"
 CONFIG_DIR="config"
 SCRIPT_NAME="update-and-start.sh"

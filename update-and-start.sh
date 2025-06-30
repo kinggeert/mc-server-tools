@@ -74,6 +74,9 @@ elif [ $(cat $REPO_DIR/pack.toml | grep "fabric") == 1]; then
 elif [ $(cat $REPO_DIR/pack.toml | grep "quilt") == 1]; then
     MODLOADER="quilt"
     MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
+elif [ $(cat $REPO_DIR/pack.toml | grep "neoforge") == 1]; then
+    MODLOADER="neoforge"
+    MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 else
     echo "Error: Could not extract modloader."
 fi
@@ -92,6 +95,10 @@ elif [ $MODLOADER == "quilt"]; then
     QUILT_JAR_URL="https://serverjar.org/download-version/quilt/${MINECRAFT_VERSION}"
     echo "Checking for updates to server.jar..."
     wget -N -O server.jar "$QUILT_JAR_URL"
+elif [ $MODLOADER == "neoforge"]; then
+    NEOFORGE_JAR_URL="https://serverjar.org/download-version/neoforge/${MINECRAFT_VERSION}"
+    echo "Checking for updates to server.jar..."
+    wget -N -O server.jar "$NEOFORGE_JAR_URL"
 else
     echo "Error: No modloader selected."
 fi

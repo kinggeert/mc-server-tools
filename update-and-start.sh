@@ -71,6 +71,9 @@ if [ $(cat $REPO_DIR/pack.toml | grep "forge") == 1]; then
 elif [ $(cat $REPO_DIR/pack.toml | grep "fabric") == 1]; then
     MODLOADER="fabric"
     MODLOADER_VERSION=$(grep -E '^\s*fabric\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
+elif [ $(cat $REPO_DIR/pack.toml | grep "quilt") == 1]; then
+    MODLOADER="quilt"
+    MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 else
     echo "Error: Could not extract modloader."
 fi
@@ -85,6 +88,10 @@ elif [ $MODLOADER == "forge"]; then
     FORGE_JAR_URL="https://mcutils.com/api/server-jars/forge/${MINECRAFT_VERSION}/download"
     echo "Checking for updates to server.jar..."
     wget -N -O server.jar "$FORGE_JAR_URL"
+elif [ $MODLOADER == "quilt"]; then
+    QUILT_JAR_URL="https://serverjar.org/download-version/quilt/${MINECRAFT_VERSION}"
+    echo "Checking for updates to server.jar..."
+    wget -N -O server.jar "$QUILT_JAR_URL"
 else
     echo "Error: No modloader selected."
 fi

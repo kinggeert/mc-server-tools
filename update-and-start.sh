@@ -68,7 +68,10 @@ fi
 echo "Extracted Minecraft version: $MINECRAFT_VERSION"
 
 # --- Extract modloader from pack.toml
-if grep -q "forge" "$REPO_DIR/pack.toml"; then
+if grep -q "neoforge" "$REPO_DIR/pack.toml"; then
+    MODLOADER="neoforge"
+    MODLOADER_VERSION=$(grep -E '^\s*neoforge\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
+elif grep -q "forge" "$REPO_DIR/pack.toml"; then
     MODLOADER="forge"
     MODLOADER_VERSION=$(grep -E '^\s*forge\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 elif grep -q "fabric" "$REPO_DIR/pack.toml"; then
@@ -76,9 +79,6 @@ elif grep -q "fabric" "$REPO_DIR/pack.toml"; then
     MODLOADER_VERSION=$(grep -E '^\s*fabric\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 elif grep -q "quilt" "$REPO_DIR/pack.toml"; then
     MODLOADER="quilt"
-    MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
-elif grep -q "neoforge" "$REPO_DIR/pack.toml"; then
-    MODLOADER="neoforge"
     MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 else
     echo "Error: Could not extract modloader."
@@ -99,14 +99,15 @@ elif [ "$MODLOADER" == "forge" ]; then
 #    FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
 #    mv $FORGE_DIR/forge-*-server.jar server.jar
 elif [ "$MODLOADER" == "quilt" ]; then
-    QUILT_JAR_URL="https://quiltmc.org/api/v1/download-latest-installer/java-universal"
+    QUILT_INSTALLER_JAR_URL="https://quiltmc.org/api/v1/download-latest-installer/java-universal"
     echo "Checking for updates to quilt installer jar..."
-    wget -N "$QUILT_JAR_URL"
+    wget -N "$QUILT_INSTALLER_JAR_URL"
     java -jar java-universal install server ${MINECRAFT_VERSION} --download-server --install-dir=./
 elif [ "$MODLOADER" == "neoforge" ]; then
-    NEOFORGE_JAR_URL="https://serverjar.org/download-version/neoforge/${MINECRAFT_VERSION}"
-    echo "Checking for updates to server.jar..."
-    wget -N -O server.jar "$NEOFORGE_JAR_URL"
+    NEOFORGE_INSTALLER_JAR_URL="https://maven.neoforged.net/releases/net/neoforged/neoforge/${MODLOADER_VERSION}/neoforge-${MODLOADER_VERSION}-installer.jar"
+    echo "Checking for updates to NeoForge installer jar..."
+    wget -N -O neoforge-installer.jar "$NEOFORGE_INSTALLER_JAR_URL"
+    java -jar neoforge-installer.jar --install-server
 else
     echo "Error: No modloader selected."
 fi
@@ -164,6 +165,10 @@ if [ "$MODLOADER" == "forge" ]; then
     echo "Starting Forge server..."
     FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
     java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" @"${FORGE_DIR}unix_args.txt" "$@" nogui
+elif [ "$MODLOADER" = "neoforge" ]; then
+    echo "Starting NeoForge server"
+    NEOFORGE_DIR=$(ls -dv libraries/net/neoforged/neoforge/*/ | tail -n1)
+    java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" @"${NEOFORGE_DIR}unix_args.txt" "$@" nogui
 elif [ "$MODLOADER" == "quilt" ]; then
     echo "Starting Quilt server..."
     java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" -jar quilt-server-launch.jar nogui

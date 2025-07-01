@@ -39,7 +39,7 @@ else
 fi
 
 # --- Update the script ---
-if [ $AUTO_UPDATE == 1]; then
+if [ $AUTO_UPDATE == "1"]; then
     wget -N "https://github.com/kinggeert/mc-server-tools/blob/main/update-and-start.sh"
 fi
 
@@ -68,16 +68,16 @@ fi
 echo "Extracted Minecraft version: $MINECRAFT_VERSION"
 
 # --- Extract modloader from pack.toml
-if [ $(cat $REPO_DIR/pack.toml | grep "forge") == 1]; then
+if grep -q "forge" "$REPO_DIR/pack.toml"; then
     MODLOADER="forge"
     MODLOADER_VERSION=$(grep -E '^\s*forge\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
-elif [ $(cat $REPO_DIR/pack.toml | grep "fabric") == 1]; then
+elif grep -q "fabric" "$REPO_DIR/pack.toml"; then
     MODLOADER="fabric"
     MODLOADER_VERSION=$(grep -E '^\s*fabric\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
-elif [ $(cat $REPO_DIR/pack.toml | grep "quilt") == 1]; then
+elif grep -q "quilt" "$REPO_DIR/pack.toml"; then
     MODLOADER="quilt"
     MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
-elif [ $(cat $REPO_DIR/pack.toml | grep "neoforge") == 1]; then
+elif grep -q "neoforge" "$REPO_DIR/pack.toml"; then
     MODLOADER="neoforge"
     MODLOADER_VERSION=$(grep -E '^\s*quilt\s*=' "$REPO_DIR/pack.toml" | head -n1 | cut -d'"' -f2)
 else
@@ -86,19 +86,23 @@ fi
 echo "Extracted modloader: $MODLOADER $MODLOADER_VERSION"
 
 # --- Update server jar ---
-if [ $MODLOADER == "fabric"]; then
+if [ "$MODLOADER" == "fabric" ]; then
     FABRIC_JAR_URL="https://jars.arcadiatech.org/fabric/${MINECRAFT_VERSION}/fabric.jar"
     echo "Checking for updates to server.jar..."
     wget -N -O server.jar "$FABRIC_JAR_URL"
-elif [ $MODLOADER == "forge"]; then
-    FORGE_JAR_URL="https://mcutils.com/api/server-jars/forge/${MINECRAFT_VERSION}/download"
-    echo "Checking for updates to server.jar..."
-    wget -N -O server.jar "$FORGE_JAR_URL"
-elif [ $MODLOADER == "quilt"]; then
+elif [ "$MODLOADER" == "forge" ]; then
+    FORGE_INSTALLER_JAR_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/${MINECRAFT_VERSION}-${MODLOADER_VERSION}/forge-${MINECRAFT_VERSION}-${MODLOADER_VERSION}-installer.jar"
+    echo "Checking for updates to forge-installer.jar..."
+    wget -N -O forge-installer.jar "$FORGE_INSTALLER_JAR_URL"
+    echo "Running forge installer..."
+    java -jar forge-installer.jar --installServer
+#    FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
+#    mv $FORGE_DIR/forge-*-server.jar server.jar
+elif [ "$MODLOADER" == "quilt" ]; then
     QUILT_JAR_URL="https://serverjar.org/download-version/quilt/${MINECRAFT_VERSION}"
     echo "Checking for updates to server.jar..."
     wget -N -O server.jar "$QUILT_JAR_URL"
-elif [ $MODLOADER == "neoforge"]; then
+elif [ "$MODLOADER" == "neoforge" ]; then
     NEOFORGE_JAR_URL="https://serverjar.org/download-version/neoforge/${MINECRAFT_VERSION}"
     echo "Checking for updates to server.jar..."
     wget -N -O server.jar "$NEOFORGE_JAR_URL"
@@ -155,6 +159,13 @@ fi
 echo "Environment variable substitution complete."
 
 # --- Start the Server ---
-echo "Starting the Fabric server..."
-java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" -jar server.jar nogui
+if [ "$MODLOADER" == "forge" ]; then
+    FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
+    java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" @"${FORGE_DIR}unix_args.txt" "$@" nogui
+else
+    echo "Starting the server..."
+    java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" -jar server.jar nogui
+fi
+
+
 

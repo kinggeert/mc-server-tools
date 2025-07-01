@@ -99,9 +99,10 @@ elif [ "$MODLOADER" == "forge" ]; then
 #    FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
 #    mv $FORGE_DIR/forge-*-server.jar server.jar
 elif [ "$MODLOADER" == "quilt" ]; then
-    QUILT_JAR_URL="https://serverjar.org/download-version/quilt/${MINECRAFT_VERSION}"
-    echo "Checking for updates to server.jar..."
-    wget -N -O server.jar "$QUILT_JAR_URL"
+    QUILT_JAR_URL="https://quiltmc.org/api/v1/download-latest-installer/java-universal"
+    echo "Checking for updates to quilt installer jar..."
+    wget -N "$QUILT_JAR_URL"
+    java -jar java-universal install server ${MINECRAFT_VERSION} --download-server --install-dir=./
 elif [ "$MODLOADER" == "neoforge" ]; then
     NEOFORGE_JAR_URL="https://serverjar.org/download-version/neoforge/${MINECRAFT_VERSION}"
     echo "Checking for updates to server.jar..."
@@ -160,8 +161,12 @@ echo "Environment variable substitution complete."
 
 # --- Start the Server ---
 if [ "$MODLOADER" == "forge" ]; then
+    echo "Starting Forge server..."
     FORGE_DIR=$(ls -dv libraries/net/minecraftforge/forge/*/ | tail -n1)
     java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" @"${FORGE_DIR}unix_args.txt" "$@" nogui
+elif [ "$MODLOADER" == "quilt" ]; then
+    echo "Starting Quilt server..."
+    java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" -jar quilt-server-launch.jar nogui
 else
     echo "Starting the server..."
     java -Xms"${MEM_MIN}M" -Xmx"${MEM_MAX}M" -jar server.jar nogui

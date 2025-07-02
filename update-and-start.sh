@@ -21,6 +21,23 @@ CONFIG_DIR="config"
 SCRIPT_NAME="update-and-start.sh"
 SERVER_PROPERTIES="server.properties"
 
+# --- Automatically update the script ---
+if [ "$AUTO_UPDATE" == "1" ]; then
+    OLD_HASH=$(sha256sum update-and-start.sh 2>/dev/null)
+
+    wget -N "https://raw.githubusercontent.com/kinggeert/mc-server-tools/refs/heads/main/update-and-start.sh"
+
+    NEW_HASH=$(sha256sum update-and-start.sh)
+
+    if [ "$OLD_HASH" != "$NEW_HASH" ]; then
+        echo "New version downloaded. Running..."
+        sh ./update-and-start.sh
+        exit 1
+    else
+        echo "No new version found. Continuing as normal."
+    fi
+fi
+
 # --- Repository Setup (Handle Local and Remote Repos) ---
 if [ -d "$REPO_SOURCE/.git" ]; then
     echo "Using local Git repository: $REPO_SOURCE"
@@ -36,11 +53,6 @@ elif [[ "$REPO_SOURCE" =~ ^https?:// ]]; then
 else
     echo "Error: '$REPO_SOURCE' is not a valid Git repository path or URL!"
     exit 1
-fi
-
-# --- Update the script ---
-if [ $AUTO_UPDATE == "1"]; then
-    wget -N "https://github.com/kinggeert/mc-server-tools/blob/main/update-and-start.sh"
 fi
 
 # --- Load secrets ---
